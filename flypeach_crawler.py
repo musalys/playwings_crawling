@@ -8,8 +8,10 @@ import requests
 from bs4 import BeautifulSoup
 from mongodb_flypeach import EventDAO
 
+
 class FlyPeachCrawler(object):
 
+    # 크롤러 초기화
     def __init__(self, origin_url, eventdao):
         self.origin_url = origin_url
         self.eventdao = eventdao
@@ -29,22 +31,13 @@ class FlyPeachCrawler(object):
             try:
                 # 프로모션 및 특가 정보가 있다면 링크 추출 및 get_content 메서드 호출
                 if j.ul.li.a['href']:
-                    # print j.ul.li.a.get_text().strip()
-                    # print j.ul.li.a['href']
                     link = j.ul.li.a['href']
-
-                    # print 'method 1'
                     self.get_content(link)
 
             # 에러메시지 출력
             except Exception as e:
                 print '1', e
                 self.get_link_from_main_page()
-
-            # 이 방법이 실패했을 경우, 최종 실행 내용 및 메인 페이지 링크 추출 메서드 호출
-            # finally:
-            #    print 'end1'
-            #    self.get_link_from_main_page()
 
     # 메인페이지의 전체 링크와 캠페인 및 세일 url을 비교하여 세일 및 프로모션 링크 추출
     def get_link_from_main_page(self):
@@ -64,25 +57,14 @@ class FlyPeachCrawler(object):
             # 링크 추출
             for k in soup.find_all('a', href=True):
 
-                # campaign 및 sale url 포함되면 url로 간주하고 저장
+                # campaign 및 sale url 포함되면 url로 간주하고 내용 크롤
                 if (campaign or sale) in k['href']:
-
-                    # print k['href']
                     link = k['href']
-
-                    # print 'method 2'
                     self.get_content(link)
-
-                # print 'NO PROMOTIONS!!'
 
         # 에러 출력
         except Exception as e:
             print '2', e
-
-        # 최종 출력
-        # finally:
-        #     print 'end2'
-
 
     # 프로모션의 내용을 크롤링 하는 method
     def get_content(self, url):
@@ -97,27 +79,31 @@ class FlyPeachCrawler(object):
             for k in soup.find_all('div', attrs={'class': 'breadcrumb'}):
 
                 # 제목 출력 test
-                # print k.find(href=url).get_text()
                 title = k.find(href=url).get_text()
 
-                # 프로모션 결과 저장(존재하면 저장, 존재하지 않으면 저장X)
+                # 프로모션 결과 저장(존재하면 저장, 존재하지 않으면 저장X)하고 알림메시지 출력
                 if self.eventdao.save_events(url, title):
-                    print 'NEW PROMOTIONS!!'
+                    self.get_alarm(url, title)
 
-                print 'NO PROMOTIONS.'
+                else:
+                    print 'NO PROMOTIONS.'
 
-
-        # 예외처리
+        # 예외처리 및 오류출력
         except Exception as e:
             print '3', e
 
-        # 최종 출력
-        # finally:
-        #     print 'end3'
+    def get_alarm(self, link, title):
+        print '------------------------------------------'
+        print 'FlyPeachCrawler'
+        print title
+        print 'link : {}'.format(link)
+        print '------------------------------------------'
 
-# 크롤링 page
-origin_url = 'http://www.flypeach.com/pc/kr'
+# 크롤러 시작 및 필요한 객체 생성
+if __name__ == '__main__':
 
-eventdao = EventDAO()
-crawler = FlyPeachCrawler(origin_url, eventdao)
-crawler.get_sales_promos()
+    # 크롤링 page, DAO파일
+    origin_url = 'http://www.flypeach.com/pc/kr'
+    eventdao = EventDAO()
+    crawler = FlyPeachCrawler(origin_url, eventdao)
+    crawler.get_sales_promos()

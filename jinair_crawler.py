@@ -4,12 +4,11 @@ import sys
 reload(sys)
 sys.setdefaultencoding('utf-8')
 
-import time, threading
+import time
 import datetime
 import requests
 from bs4 import BeautifulSoup
 from mongodb_jinair import EventDAO
-# from memcache import MemCache
 
 
 class JinAirCrawler(object):
@@ -39,7 +38,6 @@ class JinAirCrawler(object):
 
                 # 제목 및 게시글 link 생성을 위한 인자 추출
                 for k in soup_1.find_all('nobr'):
-                    # print k.get_text()
 
                     # 제목 추출
                     title = k.get_text()
@@ -53,49 +51,45 @@ class JinAirCrawler(object):
                     # 게시글 link완성
                     link = content_url.format(page, seq, num, keyfield)
 
-                    # print link
-                    # print str(title.encode('utf-8'))
-
                     # 게시글 링크, 제목 튜플화 시켜 list로 저장
                     list1.append(tuple((link, title)))
 
+
                 # 이벤트 기간 크롤링을 위한 BeautifulSoup 사용
                 for j in soup_1.find_all('span', id=lambda x: x and x.endswith('lblEventTerm')):
-                    # print j.get_text().split(' ~ ')
 
                     # 이벤트 시작 - 종료기간
                     event_date = j.get_text().split(' ~ ')
-                    # end_date = j.get_text().split(' ~ ')[1]
 
                     # 이벤트 기간 tuple화 후 list에 저장
                     list2.append(tuple(event_date))
 
-            # 예외처리
+            # 예외처리 및 오류 출력
             except Exception as e:
                 print '1', e
 
         # 링크, 제목 list와 이벤트 기간 list의 인자를 받아 DB 저장 parameter로 한꺼번에 전달
         for x, y in zip(list1, list2):
-            # print x[0], x[1], y[0], y[1]
+
             link = x[0]
             title = x[1]
             start_date = y[0]
             end_date = y[1]
 
             try:
-                # EventDAO.py로 연결: 각 게시글이 DB에 존재하면 저장하지않고, 존재하지 않으면 저장함.
+                # DB로 연결: 각 게시글이 DB에 존재하면 저장하지않고, 존재하지 않으면 저장함.
                 if self.eventdao.save_events(link, title, start_date, end_date):
                     # 새로운 이벤트면 저장하고 알람 메서드 호출
-                    self.get_alarm()
+                    self.get_alarm(link, title, start_date, end_date)
 
                 # 새로운 이벤트 없으면 없다고 출력
-                self.no_new_events()
+                else:
+                    self.no_new_events()
 
-            # 예외처리
+            # 예외처리 및 오류메시지 출력
             except Exception as e:
                 print '2', e
-    #         finally:
-    #             return 'l'
+
 
     # 게시판 마지막 페이지 번호 추출 메서드
     def get_last_page_number(self, url):
@@ -109,13 +103,10 @@ class JinAirCrawler(object):
 
             # 페이지 번호 추출
             try:
-                # 마지막 page정보가 있다면 전달하여 진행
+                # 마지막 page정보가 있다면 추출하여 전달
                 if j.a.get_text():
                     last_page_number = int(j.a.get_text())
                     self.get_pages_content(last_page_number)
-
-                # print j.strong.get_text()
-                # last_page_number = int(j.strong.get_text())
 
             # 에러메시지 출력
             except Exception as e:
@@ -123,16 +114,16 @@ class JinAirCrawler(object):
 
             # 마지막 페이지가 1페이지라면 페이지 전달하여 1페이지 크롤링
             finally:
-                # print j.strong.get_text()
                 last_page_number = int(j.strong.get_text())
                 self.get_pages_content(last_page_number)
 
     # 새로운 이벤트가 생성됐을시 알람
-    def get_alarm(self):
+    def get_alarm(self, link, title, start_date, end_date):
         print '------------------------------------------'
-        print 'YOU GOT NEWLY UPDATED EVENTS IN JINAIR!!!'
-        print 'YOU GOT NEWLY UPDATED EVENTS IN JINAIR!!!'
-        print 'YOU GOT NEWLY UPDATED EVENTS IN JINAIR!!!'
+        print 'JinAirCrawler'
+        print title
+        print 'link : {}'.format(link)
+        print '이벤트 기간 : {} ~ {}'.format(start_date, end_date)
         print '------------------------------------------'
 
     # 새로운 이벤트 없을시의 알람
@@ -165,10 +156,12 @@ class JinAirCrawler(object):
 #
 # Repeat()
 
-# 크롤링 시작 url
-origin_url = 'http://www.jinair.com/HOM/Event/Event01List.aspx'
 
-# 크롤링 시작 메서드 호출
-eventdao = EventDAO()
-crawler = JinAirCrawler(eventdao)
-crawler.get_last_page_number(origin_url)
+# 크롤링 시작시 필요한 변수 선언 및 객체생성
+if __name__ == '__main__':
+
+    # 크롤링 시작 url
+    origin_url = 'http://www.jinair.com/HOM/Event/Event01List.aspx'
+    eventdao = EventDAO()
+    crawler = JinAirCrawler(eventdao)
+    crawler.get_last_page_number(origin_url)

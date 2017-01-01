@@ -5,10 +5,9 @@ reload(sys)
 sys.setdefaultencoding('utf-8')
 
 from pymongo import MongoClient
-from mongodb_jinair import EventDAO
+
 
 # AWS EC2 서버에 있는 mongodb와 연결
-
 # 본인 AWS EC2 주소
 server = 'ec2-35-164-25-57.us-west-2.compute.amazonaws.com'
 
