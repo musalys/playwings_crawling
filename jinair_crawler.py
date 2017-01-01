@@ -7,10 +7,8 @@ sys.setdefaultencoding('utf-8')
 import time, threading
 import datetime
 import requests
-import json
-import re
 from bs4 import BeautifulSoup
-from mongodb import EventDAO
+from mongodb_jinair import EventDAO
 # from memcache import MemCache
 
 
@@ -106,13 +104,28 @@ class JinAirCrawler(object):
         content = res.content
         soup = BeautifulSoup(content, 'html.parser')
 
-        # 게시판 마지막 페이지 번호 추출
+        # 게시판 페이지 번호를 추출하여 크롤링 진행
         for j in soup.find_all('ul', attrs={"class": "paging"}):
-            # 페이지 번호 정수화
-            last_page_number = int(j.a.get_text())
-            # print last_page_number
-            # 마지막 페이지 번호 추출하여 크롤링 메서드로 전달
-            self.get_pages_content(last_page_number)
+
+            # 페이지 번호 추출
+            try:
+                # 마지막 page정보가 있다면 전달하여 진행
+                if j.a.get_text():
+                    last_page_number = int(j.a.get_text())
+                    self.get_pages_content(last_page_number)
+
+                # print j.strong.get_text()
+                # last_page_number = int(j.strong.get_text())
+
+            # 에러메시지 출력
+            except Exception as e:
+                print '1', e
+
+            # 마지막 페이지가 1페이지라면 페이지 전달하여 1페이지 크롤링
+            finally:
+                # print j.strong.get_text()
+                last_page_number = int(j.strong.get_text())
+                self.get_pages_content(last_page_number)
 
     # 새로운 이벤트가 생성됐을시 알람
     def get_alarm(self):
@@ -132,22 +145,30 @@ class JinAirCrawler(object):
 
 
 # 5분마다 batch로 실행반복 메서드
-def Repeat():
+# def Repeat():
+#
+#     # 크롤링 시작 화면 출력
+#     print '*' * 80
+#     print time.ctime(), 'CRAWL START!!!!!'
+#     print '*' * 80
 
-    # 크롤링 시작 화면 출력
-    print '*' * 80
-    print time.ctime(), 'CRAWL START!!!!!'
-    print '*' * 80
+#     # 크롤링 시작 url
+#     origin_url = 'http://www.jinair.com/HOM/Event/Event01List.aspx'
+#
+#     # 크롤링 시작 메서드 호출
+#     eventdao = EventDAO()
+#     crawler = JinAirCrawler(eventdao)
+#     crawler.get_last_page_number(origin_url)
+#
+#     # Repeat()메서드 300초 후에 다시 시작
+#     threading.Timer(60, Repeat).start()
+#
+# Repeat()
 
-    # 크롤링 시작 url
-    origin_url = 'http://www.jinair.com/HOM/Event/Event01List.aspx'
+# 크롤링 시작 url
+origin_url = 'http://www.jinair.com/HOM/Event/Event01List.aspx'
 
-    # 크롤링 시작 메서드 호출
-    eventdao = EventDAO()
-    crawler = JinAirCrawler(eventdao)
-    crawler.get_last_page_number(origin_url)
-
-    # Repeat()메서드 300초 후에 다시 시작
-    threading.Timer(60, Repeat).start()
-
-Repeat()
+# 크롤링 시작 메서드 호출
+eventdao = EventDAO()
+crawler = JinAirCrawler(eventdao)
+crawler.get_last_page_number(origin_url)
