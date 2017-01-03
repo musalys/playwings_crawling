@@ -9,10 +9,11 @@ from pymongo import MongoClient
 
 # AWS EC2 서버에 있는 mongodb와 연결
 # 본인 AWS EC2 주소
-server = 'ec2-35-164-25-57.us-west-2.compute.amazonaws.com'
+server = 'server'
+port = 'port'
 
 # MongoClient 객체 생성
-mongo = MongoClient(server, 27017)
+mongo = MongoClient(server, port)
 
 # mongodb(db 이름: playwings, collection 이름: jinair)
 jinair = mongo.playwings.jinair
