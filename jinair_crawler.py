@@ -4,8 +4,6 @@ import sys
 reload(sys)
 sys.setdefaultencoding('utf-8')
 
-import time
-import datetime
 import requests
 from bs4 import BeautifulSoup
 from mongodb_jinair import EventDAOJ

@@ -86,7 +86,7 @@ class FlyPeachCrawler(object):
                 else:
                     print 'NO PROMOTIONS.'
 
-            # 예외처리 및 오류출력
+            # 예외처리, 오류출력
             except Exception as e:
                 print '3', e
 
@@ -100,7 +100,7 @@ class FlyPeachCrawler(object):
 # 크롤러 시작 및 필요한 객체 생성
 if __name__ == '__main__':
 
-    # 크롤링 page, DAO파일
+    # 크롤링 page url, DAO파일
     origin_url = 'http://www.flypeach.com/pc/kr'
     eventdao = EventDAOF()
     crawler = FlyPeachCrawler(origin_url, eventdao)
