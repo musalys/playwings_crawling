@@ -6,7 +6,7 @@ sys.setdefaultencoding('utf-8')
 
 import requests
 from bs4 import BeautifulSoup
-from mongodb_flypeach import EventDAO
+from mongodb_flypeach import EventDAOF
 
 
 class FlyPeachCrawler(object):
@@ -51,20 +51,17 @@ class FlyPeachCrawler(object):
         content = res.content
         soup = BeautifulSoup(content, 'html.parser')
 
-        # None값 대비 예외처리
-        try:
+        # 링크 추출
+        for k in soup.find_all('a', href=True):
 
-            # 링크 추출
-            for k in soup.find_all('a', href=True):
-
+            try:
                 # campaign 및 sale url 포함되면 url로 간주하고 내용 크롤
                 if (campaign or sale) in k['href']:
                     link = k['href']
                     self.get_content(link)
 
-        # 에러 출력
-        except Exception as e:
-            print '2', e
+            except Exception as e:
+                print '2', e
 
     # 프로모션의 내용을 크롤링 하는 method
     def get_content(self, url):
@@ -73,10 +70,11 @@ class FlyPeachCrawler(object):
         content = res.content
         soup = BeautifulSoup(content, 'html.parser')
 
-        # 프로모션 내용 크롤링
-        try:
-            # 제목 및 링크 추출
-            for k in soup.find_all('div', attrs={'class': 'breadcrumb'}):
+        # 제목 및 링크 추출
+        for k in soup.find_all('div', attrs={'class': 'breadcrumb'}):
+
+            # 프로모션 내용 크롤링
+            try:
 
                 # 제목 출력 test
                 title = k.find(href=url).get_text()
@@ -88,9 +86,9 @@ class FlyPeachCrawler(object):
                 else:
                     print 'NO PROMOTIONS.'
 
-        # 예외처리 및 오류출력
-        except Exception as e:
-            print '3', e
+            # 예외처리 및 오류출력
+            except Exception as e:
+                print '3', e
 
     def get_alarm(self, link, title):
         print '------------------------------------------'
@@ -104,6 +102,6 @@ if __name__ == '__main__':
 
     # 크롤링 page, DAO파일
     origin_url = 'http://www.flypeach.com/pc/kr'
-    eventdao = EventDAO()
+    eventdao = EventDAOF()
     crawler = FlyPeachCrawler(origin_url, eventdao)
     crawler.get_sales_promos()

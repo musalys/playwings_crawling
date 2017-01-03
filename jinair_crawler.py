@@ -8,7 +8,7 @@ import time
 import datetime
 import requests
 from bs4 import BeautifulSoup
-from mongodb_jinair import EventDAO
+from mongodb_jinair import EventDAOJ
 
 
 class JinAirCrawler(object):
@@ -31,14 +31,14 @@ class JinAirCrawler(object):
             content_url = 'http://www.jinair.com/HOM/Event/Event01View.aspx?page={}&seq={}&num={}&keyfield={}&keyword=&mid='
 
             # 페이지 번호 순으로 크롤링 시작
-            try:
-                res = requests.get(url)
-                content = res.content
-                soup_1 = BeautifulSoup(content, 'html.parser')
+            res = requests.get(url)
+            content = res.content
+            soup_1 = BeautifulSoup(content, 'html.parser')
 
-                # 제목 및 게시글 link 생성을 위한 인자 추출
-                for k in soup_1.find_all('nobr'):
+            # 제목 및 게시글 link 생성을 위한 인자 추출
+            for k in soup_1.find_all('nobr'):
 
+                try:
                     # 제목 추출
                     title = k.get_text()
 
@@ -54,19 +54,22 @@ class JinAirCrawler(object):
                     # 게시글 링크, 제목 튜플화 시켜 list로 저장
                     list1.append(tuple((link, title)))
 
+                except Exception as e:
+                    print '2', e
 
-                # 이벤트 기간 크롤링을 위한 BeautifulSoup 사용
-                for j in soup_1.find_all('span', id=lambda x: x and x.endswith('lblEventTerm')):
+            # 이벤트 기간 크롤링을 위한 BeautifulSoup 사용
+            for j in soup_1.find_all('span', id=lambda x: x and x.endswith('lblEventTerm')):
 
+                try:
                     # 이벤트 시작 - 종료기간
                     event_date = j.get_text().split(' ~ ')
 
                     # 이벤트 기간 tuple화 후 list에 저장
                     list2.append(tuple(event_date))
 
-            # 예외처리 및 오류 출력
-            except Exception as e:
-                print '1', e
+                # 예외처리 및 오류 출력
+                except Exception as e:
+                    print '3', e
 
         # 링크, 제목 list와 이벤트 기간 list의 인자를 받아 DB 저장 parameter로 한꺼번에 전달
         for x, y in zip(list1, list2):
@@ -88,8 +91,7 @@ class JinAirCrawler(object):
 
             # 예외처리 및 오류메시지 출력
             except Exception as e:
-                print '2', e
-
+                print '4', e
 
     # 게시판 마지막 페이지 번호 추출 메서드
     def get_last_page_number(self, url):
@@ -135,33 +137,11 @@ class JinAirCrawler(object):
         print '--------------------'
 
 
-# 5분마다 batch로 실행반복 메서드
-# def Repeat():
-#
-#     # 크롤링 시작 화면 출력
-#     print '*' * 80
-#     print time.ctime(), 'CRAWL START!!!!!'
-#     print '*' * 80
-
-#     # 크롤링 시작 url
-#     origin_url = 'http://www.jinair.com/HOM/Event/Event01List.aspx'
-#
-#     # 크롤링 시작 메서드 호출
-#     eventdao = EventDAO()
-#     crawler = JinAirCrawler(eventdao)
-#     crawler.get_last_page_number(origin_url)
-#
-#     # Repeat()메서드 300초 후에 다시 시작
-#     threading.Timer(60, Repeat).start()
-#
-# Repeat()
-
-
 # 크롤링 시작시 필요한 변수 선언 및 객체생성
 if __name__ == '__main__':
 
     # 크롤링 시작 url
     origin_url = 'http://www.jinair.com/HOM/Event/Event01List.aspx'
-    eventdao = EventDAO()
+    eventdao = EventDAOJ()
     crawler = JinAirCrawler(eventdao)
     crawler.get_last_page_number(origin_url)

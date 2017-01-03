@@ -19,7 +19,7 @@ jinair = mongo.playwings.jinair
 
 
 # mongodb 쿼리 구성 파일
-class EventDAO(object):
+class EventDAOJ(object):
 
     def __init__(self):
         pass
